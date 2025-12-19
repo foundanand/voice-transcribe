@@ -1,4 +1,3 @@
-
 export interface TranscriptionResult {
   verbatim: string;
   concise?: string;

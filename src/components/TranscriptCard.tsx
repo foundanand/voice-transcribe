@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Copy, Check, MessageSquare, Repeat, Zap } from 'lucide-react';
 import { Message, TranscriptionMode } from '../types';

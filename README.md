@@ -86,20 +86,25 @@ VoxScribe is a modern web application that captures your voice and converts it t
 
 ```
 voice-transcribe/
-├── App.tsx                    # Main application component
-├── index.tsx                  # React entry point
 ├── index.html                 # HTML template
-├── types.ts                   # TypeScript type definitions
 ├── vite.config.ts             # Vite configuration
 ├── tsconfig.json              # TypeScript configuration
 ├── package.json               # Dependencies and scripts
 │
-├── components/
-│   ├── AudioVisualizer.tsx    # Real-time audio waveform display
-│   └── TranscriptCard.tsx     # Transcription result card component
-│
-└── services/
-    └── geminiService.ts       # Gemini AI integration
+└── src/
+    ├── main.tsx               # React entry point
+    ├── App.tsx                # Main application component
+    ├── index.css              # Global styles
+    │
+    ├── types/
+    │   └── index.ts           # TypeScript type definitions
+    │
+    ├── components/
+    │   ├── AudioVisualizer.tsx    # Real-time audio waveform display
+    │   └── TranscriptCard.tsx     # Transcription result card component
+    │
+    └── services/
+        └── geminiService.ts   # Gemini AI integration
 ```
 
 ---
@@ -143,7 +148,7 @@ The Gemini model is instructed to:
 
 ### Gemini Model
 
-The app uses `gemini-3-flash-preview` for fast, high-quality transcription. You can modify this in [services/geminiService.ts](services/geminiService.ts).
+The app uses `gemini-3-flash-preview` for fast, high-quality transcription. You can modify this in [src/services/geminiService.ts](src/services/geminiService.ts).
 
 ---
 
