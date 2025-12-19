@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, Square, Trash2, Sparkles, Copy, Check } from 'lucide-react';
+import { Mic, Square, Trash2, Sparkles, Copy, Check, Settings, X, Keyboard } from 'lucide-react';
 import { transcribeAudio } from './services/geminiService';
 import { Message } from './types';
 import TranscriptCard from './components/TranscriptCard';
@@ -14,7 +14,12 @@ const App: React.FC = () => {
   const [isNotch, setIsNotch] = useState(window.location.hash === '#notch');
   const [isConcise, setIsConcise] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isSuperKeyActive, setIsSuperKeyActive] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [superKey, setSuperKey] = useState('CommandOrControl+Shift+X');
+  const [isRecordingShortcut, setIsRecordingShortcut] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const isRecordingRef = useRef(false);
   const chunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
@@ -34,14 +39,85 @@ const App: React.FC = () => {
       setIsConcise(event.payload);
     });
 
+    const unlistenSuperKey = listen('super-key-press', () => {
+      // Use ref to avoid stale state in listener
+      if (isRecordingRef.current) {
+        stopRecording();
+      } else {
+        setIsSuperKeyActive(true);
+        startRecording();
+      }
+    });
+
+    const loadSettings = async () => {
+      try {
+        const { load } = await import('@tauri-apps/plugin-store');
+        const store = await load('settings.json');
+        const savedKey = await store.get<{ value: string }>('superKey');
+        if (savedKey) {
+          setSuperKey(savedKey.value);
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('update_super_key', { shortcutStr: savedKey.value });
+        }
+      } catch (e) {
+        console.error("Failed to load settings:", e);
+      }
+    };
+
+    loadSettings();
+
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      if (!isRecordingShortcut) return;
+      e.preventDefault();
+
+      const keys = [];
+      if (e.ctrlKey) keys.push('Control');
+      if (e.altKey) keys.push('Alt');
+      if (e.shiftKey) keys.push('Shift');
+      if (e.metaKey) keys.push('Command');
+
+      // Add the actual key
+      const key = e.key.toUpperCase();
+      if (['CONTROL', 'ALT', 'SHIFT', 'META'].indexOf(key) === -1) {
+        keys.push(key);
+      }
+
+      if (keys.length > 0 && !['CONTROL', 'ALT', 'SHIFT', 'META'].includes(key)) {
+        let shortcut = keys.join('+');
+        // Tauri uses CommandOrControl
+        shortcut = shortcut.replace('Command', 'CommandOrControl').replace('Control', 'CommandOrControl');
+
+        setSuperKey(shortcut);
+        setIsRecordingShortcut(false);
+
+        try {
+          const { load } = await import('@tauri-apps/plugin-store');
+          const store = await load('settings.json');
+          await store.set('superKey', { value: shortcut });
+          await store.save();
+
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('update_super_key', { shortcutStr: shortcut });
+        } catch (err) {
+          console.error("Failed to save shortcut:", err);
+        }
+      }
+    };
+
+    if (isRecordingShortcut) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+
     window.addEventListener('hashchange', handleHashChange);
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('keydown', handleKeyDown);
       unlistenSync.then(f => f());
       unlistenIsRecording.then(f => f());
       unlistenIsConcise.then(f => f());
+      unlistenSuperKey.then(f => f());
     };
-  }, []);
+  }, [isRecordingShortcut]);
 
   const syncState = async (newMessages: Message[]) => {
     await emit('sync-messages', newMessages);
@@ -63,7 +139,14 @@ const App: React.FC = () => {
 
   const startRecording = async () => {
     try {
-      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          channelCount: 1,
+        }
+      });
       setStream(audioStream);
 
       const mediaRecorder = new MediaRecorder(audioStream);
@@ -87,6 +170,7 @@ const App: React.FC = () => {
 
       mediaRecorder.start();
       setIsRecording(true);
+      isRecordingRef.current = true;
       syncRecording(true);
     } catch (err) {
       console.error("Error accessing microphone:", err);
@@ -98,6 +182,7 @@ const App: React.FC = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      isRecordingRef.current = false;
       syncRecording(false);
     }
   };
@@ -141,6 +226,13 @@ const App: React.FC = () => {
             : msg
         );
         syncState(nextMessages);
+
+        // Auto-copy if super key was used
+        if (isSuperKeyActive) {
+          handleCopy(isConcise ? (result.concise || result.verbatim) : result.verbatim);
+          setIsSuperKeyActive(false);
+        }
+
         return nextMessages;
       });
     } catch (error: any) {
@@ -312,6 +404,12 @@ const App: React.FC = () => {
           </h1>
         </div>
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowSettings(true)}
+            className="text-slate-400 hover:text-white transition-colors p-2"
+          >
+            <Settings size={20} />
+          </button>
           {messages.length > 0 && (
             <button
               onClick={clearHistory}
@@ -391,6 +489,69 @@ const App: React.FC = () => {
 
       {/* Spacer for sticky footer */}
       <div className="h-32"></div>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={() => setShowSettings(false)}></div>
+          <div className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Settings size={20} className="text-indigo-500" />
+                Settings
+              </h3>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="text-slate-500 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">
+                  Global Super Key
+                </label>
+                <div className="flex flex-col gap-3">
+                  <div className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${isRecordingShortcut
+                    ? 'border-indigo-500 bg-indigo-500/10'
+                    : 'border-slate-800 bg-slate-800/40 hover:border-slate-700'
+                    }`}>
+                    <div className="flex items-center gap-3">
+                      <Keyboard className={isRecordingShortcut ? 'text-indigo-400' : 'text-slate-500'} size={20} />
+                      <span className={`font-mono text-sm ${isRecordingShortcut ? 'text-indigo-200' : 'text-slate-300'}`}>
+                        {isRecordingShortcut ? 'Recording...' : superKey.replace('CommandOrControl', 'Cmd/Ctrl')}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setIsRecordingShortcut(!isRecordingShortcut)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${isRecordingShortcut
+                        ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
+                        : 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20'
+                        }`}
+                    >
+                      {isRecordingShortcut ? 'Cancel' : 'Change'}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-relaxed italic">
+                    Pressing this combination anywhere will toggle LazyTyper recording and auto-copy the result.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 pt-0">
+              <button
+                onClick={() => setShowSettings(false)}
+                className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl font-bold transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,14 +1,45 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
-    Manager,
+    Emitter, Manager, Runtime,
 };
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+
+#[tauri::command]
+fn update_super_key<R: Runtime>(app: tauri::AppHandle<R>, shortcut_str: String) -> Result<(), String> {
+    let _ = app.global_shortcut().unregister_all();
+    
+    let shortcut: Shortcut = shortcut_str.parse().map_err(|_| format!("invalid shortcut: {}", shortcut_str))?;
+    
+    app.global_shortcut().on_shortcut(shortcut, move |app, _shortcut, event| {
+        if event.state() == tauri_plugin_global_shortcut::ShortcutState::Pressed {
+            if let Some(window) = app.get_webview_window("notch") {
+                if !window.is_visible().unwrap() {
+                    if let Ok(Some(monitor)) = window.primary_monitor() {
+                        let size = monitor.size();
+                        let window_size = window.outer_size().unwrap();
+                        let x = (size.width as i32 - window_size.width as i32) / 2;
+                        window.set_position(tauri::PhysicalPosition::new(x, 0)).unwrap();
+                    }
+                    window.show().unwrap();
+                    window.set_focus().unwrap();
+                }
+            }
+            let _ = app.emit("super-key-press", ());
+        }
+    }).map_err(|e| e.to_string())?;
+
+    Ok(())
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_store::Builder::default().build())
+        .invoke_handler(tauri::generate_handler![update_super_key])
         .setup(|app| {
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let show_i = MenuItem::with_id(app, "show", "Open App", true, None::<&str>)?;
@@ -50,6 +81,28 @@ pub fn run() {
                     }
                 })
                 .build(app)?;
+
+            // Register default Super Key
+            // Note: In a real app, we'd read this from the store instead.
+            // For now, let's start with a default.
+            let _app_handle = app.handle().clone();
+            app.global_shortcut().on_shortcut("CommandOrControl+Shift+X", move |app, _shortcut, event| {
+                if event.state() == tauri_plugin_global_shortcut::ShortcutState::Pressed {
+                    if let Some(window) = app.get_webview_window("notch") {
+                        if !window.is_visible().unwrap() {
+                            if let Ok(Some(monitor)) = window.primary_monitor() {
+                                let size = monitor.size();
+                                let window_size = window.outer_size().unwrap();
+                                let x = (size.width as i32 - window_size.width as i32) / 2;
+                                window.set_position(tauri::PhysicalPosition::new(x, 0)).unwrap();
+                            }
+                            window.show().unwrap();
+                            window.set_focus().unwrap();
+                        }
+                    }
+                    let _ = app.emit("super-key-press", ());
+                }
+            }).unwrap();
 
             // Prevent app from quitting when main window is closed
             if let Some(main_window) = app.get_webview_window("main") {
