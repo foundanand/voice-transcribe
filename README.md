@@ -1,26 +1,27 @@
-# 🎙️ VoxScribe
+# 🎙️ LazyTyper
 
-**AI-powered voice transcription that preserves your personality.**
+**AI-powered voice transcription for macOS that actually sounds like you.**
 
-VoxScribe is a modern web application that captures your voice and converts it to text using Google's Gemini AI. Unlike traditional transcription tools, VoxScribe provides both a word-for-word transcription and an intelligent, concise version that preserves your unique speaking style and tone.
+LazyTyper is a lightweight, native macOS application that captures your voice and converts it to text using Google's Gemini AI. It sits in your menu bar and provides a quick-access "Notch" for instant recording and transcription.
 
 ![React](https://img.shields.io/badge/React-19.x-61DAFB?logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?logo=vite&logoColor=white)
+![Tauri](https://img.shields.io/badge/Tauri-2.0-24C8D8?logo=tauri&logoColor=white)
+![Rust](https://img.shields.io/badge/Rust-Stable-000000?logo=rust&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Google%20Gemini-AI-4285F4?logo=google&logoColor=white)
 
 ---
 
 ## ✨ Features
 
-- **🎤 One-Click Recording** — Start recording with a single click using your browser's microphone
+- **⚡ Quick Access Notch** — A centered, always-on-top "Notch" UI (Tray click) for instant transcription.
 - **📝 Dual Transcription Modes**
-  - **Word-for-Word** — Exact verbatim transcription including filler words (um, ah, like)
-  - **Concise Mode** — AI-refined version that removes stutters while preserving your personality and tone
-- **🌍 Multi-Language Support** — Handles code-switching and multiple languages seamlessly
-- **🎨 Real-Time Audio Visualizer** — Beautiful waveform visualization while recording
-- **📋 Copy to Clipboard** — Quickly copy transcriptions with one click
-- **🌙 Modern Dark UI** — Sleek, responsive interface built with Tailwind CSS
+  - **Verbatim** — Literal word-for-word capture including fillers (um, ah, like).
+  - **Concise** — AI-refined version that removes stutters but **preserves your unique personality and tone**.
+- **🔄 Instant Sync** — Real-time state synchronization between the mini-Notch and the main history window.
+- **✍️ Multiline Editing** — Edit transcription results directly in the boxy Notch before copying.
+- **📋 Copy-First Workflow** — The primary button automatically becomes a Copy button once transcription is ready.
+- **🌍 Multi-Language Support** — Handles code-switching and multiple languages seamlessly.
+- **💎 Premium macOS Design** — Sleek card-like UI with vibrancy, rounded corners, and smooth animations.
 
 ---
 
@@ -28,14 +29,12 @@ VoxScribe is a modern web application that captures your voice and converts it t
 
 | Technology | Purpose |
 |------------|---------|
-| **React 19** | UI framework with hooks |
-| **TypeScript** | Type-safe development |
-| **Vite** | Lightning-fast build tool |
-| **Google Gemini AI** | Advanced audio transcription |
-| **Tailwind CSS** | Utility-first styling |
+| **Tauri 2.0** | Native macOS window management & system tray |
+| **Rust** | High-performance backend & window positioning |
+| **React 19** | Modern UI framework with hooks |
+| **Google Gemini AI** | Advanced audio transcription (gemini-3-flash) |
 | **Lucide React** | Beautiful icon library |
-| **Web Audio API** | Real-time audio visualization |
-| **MediaRecorder API** | Browser-based audio capture |
+| **Tailwind CSS** | Utility-first styling with custom glassmorphism |
 
 ---
 
@@ -43,98 +42,48 @@ VoxScribe is a modern web application that captures your voice and converts it t
 
 ### Prerequisites
 
-- **Node.js** (v18 or higher recommended)
-- **pnpm**, **npm**, or **yarn**
+- **Node.js** (v18+)
+- **Rust** (stable)
+- **pnpm**
 - **Google Gemini API Key** — [Get one here](https://aistudio.google.com/app/apikey)
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/voice-transcribe.git
-   cd voice-transcribe
+   git clone https://github.com/yourusername/lazytyper.git
+   cd lazytyper
    ```
 
 2. **Install dependencies**
    ```bash
    pnpm install
-   # or
-   npm install
    ```
 
 3. **Configure environment variables**
-   
-   Create a `.env.local` file in the project root:
+   Create a `.env.local` file:
    ```env
    API_KEY=your_gemini_api_key_here
    ```
 
-4. **Start the development server**
+4. **Run in Development**
    ```bash
-   pnpm dev
-   # or
-   npm run dev
+   pnpm tauri dev
    ```
 
-5. **Open your browser**
-   
-   Navigate to `http://localhost:5173` and allow microphone access when prompted.
-
----
-
-## 📁 Project Structure
-
-```
-voice-transcribe/
-├── index.html                 # HTML template
-├── vite.config.ts             # Vite configuration
-├── tsconfig.json              # TypeScript configuration
-├── package.json               # Dependencies and scripts
-│
-└── src/
-    ├── main.tsx               # React entry point
-    ├── App.tsx                # Main application component
-    ├── index.css              # Global styles
-    │
-    ├── types/
-    │   └── index.ts           # TypeScript type definitions
-    │
-    ├── components/
-    │   ├── AudioVisualizer.tsx    # Real-time audio waveform display
-    │   └── TranscriptCard.tsx     # Transcription result card component
-    │
-    └── services/
-        └── geminiService.ts   # Gemini AI integration
-```
+5. **Build for production**
+   ```bash
+   pnpm tauri build
+   ```
 
 ---
 
 ## 🎯 How It Works
 
-1. **Record** — Click the "Record Message" button and speak into your microphone
-2. **Process** — Audio is captured as WebM, converted to base64, and sent to Gemini AI
-3. **Transcribe** — Gemini returns both verbatim and refined transcriptions
-4. **View** — Toggle between word-for-word and concise modes on each transcript card
-
-### AI Transcription Logic
-
-The Gemini model is instructed to:
-- Capture everything verbatim, including filler words and pauses
-- Support code-switching between multiple languages
-- Create a concise version that:
-  - Removes stutters and redundant fillers
-  - Preserves the speaker's original tone and personality
-  - Maintains emotional energy and speaking style
-
----
-
-## 📜 Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start development server with hot reload |
-| `pnpm build` | Build for production |
-| `pnpm preview` | Preview production build locally |
+1. **Summon** — Click the tray icon in your macOS menu bar to reveal the **Notch**.
+2. **Record** — Hit the Mic button. Speak naturally.
+3. **Transcribe** — Audio is sent to Gemini (1.5 Flash) which returns both Verbatim and Concise text.
+4. **Edit & Copy** — Refine the text directly in the boxy Notch, toggle Concise mode if needed, and hit Copy.
 
 ---
 
@@ -147,37 +96,10 @@ The Gemini model is instructed to:
 | `API_KEY` | Your Google Gemini API key | ✅ Yes |
 
 ### Gemini Model
-
-The app uses `gemini-3-flash-preview` for fast, high-quality transcription. You can modify this in [src/services/geminiService.ts](src/services/geminiService.ts).
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
-
-## 🙏 Acknowledgments
-
-- [Google Gemini](https://ai.google.dev/) for powerful AI capabilities
-- [Lucide](https://lucide.dev/) for beautiful icons
-- [Vite](https://vitejs.dev/) for blazing-fast development experience
+The app uses `gemini-3-flash-preview` for blazing-fast transcription. You can adjust the system prompt or model in [src/services/geminiService.ts](src/services/geminiService.ts).
 
 ---
 
 <p align="center">
-  Built with ❤️ and 🎙️
+  Built with ❤️ for focused thinkers.
 </p>
