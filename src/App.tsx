@@ -176,7 +176,14 @@ const App: React.FC = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {
-      console.error("Failed to copy:", e);
+      console.error("Failed to copy via Tauri plugin:", e);
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error("Clipboard fallback failed:", err);
+      }
     }
   };
 
@@ -218,8 +225,8 @@ const App: React.FC = () => {
               <button
                 onClick={toggleConcise}
                 className={`text-[10px] font-bold px-2 py-1 rounded-md transition-all ${isConcise
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white'
                   }`}
               >
                 {isConcise ? "Concise" : "Verbatim"}
@@ -268,8 +275,8 @@ const App: React.FC = () => {
               <button
                 onClick={() => handleCopy(isConcise ? (latestMessage.concise || '') : latestMessage.verbatim)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${copied
-                    ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
                   }`}
               >
                 {copied ? <Check size={14} /> : <Copy size={14} />}
@@ -281,8 +288,8 @@ const App: React.FC = () => {
           <button
             onClick={isRecording ? stopRecording : startRecording}
             className={`p-3 rounded-xl transition-all transform active:scale-95 shadow-xl ${isRecording
-                ? 'bg-red-500 text-white shadow-red-500/20'
-                : 'bg-indigo-600 text-white shadow-indigo-600/20'
+              ? 'bg-red-500 text-white shadow-red-500/20'
+              : 'bg-indigo-600 text-white shadow-indigo-600/20'
               }`}
           >
             {isRecording ? <Square size={16} fill="currentColor" /> : <Mic size={16} />}

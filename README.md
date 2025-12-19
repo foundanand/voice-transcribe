@@ -19,6 +19,7 @@ LazyTyper is a lightweight, native macOS application that captures your voice an
   - **Concise** — AI-refined version that removes stutters but **preserves your unique personality and tone**.
 - **🔄 Instant Sync** — Real-time state synchronization between the mini-Notch and the main history window.
 - **✍️ Multiline Editing** — Edit transcription results directly in the boxy Notch before copying.
+- **🚀 Internal GPU Optimization** — Baked-in hardware acceleration for ultra-smooth performance.
 - **📋 Copy-First Workflow** — The primary button automatically becomes a Copy button once transcription is ready.
 - **🌍 Multi-Language Support** — Handles code-switching and multiple languages seamlessly.
 - **💎 Premium macOS Design** — Sleek card-like UI with vibrancy, rounded corners, and smooth animations.
@@ -82,7 +83,7 @@ LazyTyper is a lightweight, native macOS application that captures your voice an
 
 1. **Summon** — Click the tray icon in your macOS menu bar to reveal the **Notch**.
 2. **Record** — Hit the Mic button. Speak naturally.
-3. **Transcribe** — Audio is sent to Gemini (1.5 Flash) which returns both Verbatim and Concise text.
+3. **Transcribe** — Audio is sent to Gemini which returns both Verbatim and Concise text.
 4. **Edit & Copy** — Refine the text directly in the boxy Notch, toggle Concise mode if needed, and hit Copy.
 
 ---
