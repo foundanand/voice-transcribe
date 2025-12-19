@@ -1,0 +1,7 @@
+{
+  "name": "Voice transcribe",
+  "description": "A powerful multi-language voice transcription tool that converts speech to text word-for-word, with an optional concise mode for quick messaging.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
