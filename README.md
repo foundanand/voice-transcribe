@@ -52,7 +52,7 @@ LazyTyper is a lightweight, native macOS application that captures your voice an
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/lazytyper.git
+   git clone https://github.com/foundanand/lazytyper.git
    cd lazytyper
    ```
 
